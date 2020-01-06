@@ -46,14 +46,14 @@ function job_block_view($delta = '') {
     case 'job_latest':
       $block['subject'] = t('Latest Jobs');
       if (user_access('access job content')) {
-        $result = job_latest_post('block');
+        $result = job_latest_posts('block');
         $items = array();
         foreach ($result as $node) {
           $items[] = array(
-            'data' => l($node->$title, 'node/' . $node->nid),
+            'data' => l($node->title, 'node/' . $node->nid),
           );
         }
-        if (empty(items)) {
+        if (empty($items)) {
           $block['content'] = t('No job posts available.');
         }
         else {
@@ -224,21 +224,24 @@ function job_form($node, &$form_state) {
         '#weight' => -5
       );  
       $form['description'] = array(
-        '#type' => 'textarea',
+        '#type' => 'text_format',
+        '#format' => 'filtered_html',
         '#title' => t('Job Description'),
         '#default_value' => isset($node->description) ? $node->description : '',
         '#required' => FALSE
       );
       // Job Requirement
       $form['requirement'] = array(
-        '#type' => 'textarea',
+        '#type' => 'text_format',
+        '#format' => 'filtered_html',
         '#title' => t('Job Requirement'),
         '#rows' => 20,
         '#default_value' => isset($node->requirement) ? $node->requirement : '',
         '#required' => TRUE,
       );
       $form['application'] = array(
-        '#type' => 'textarea',
+        '#type' => 'text_format',
+        '#format' => 'filtered_html',
         '#title' => t('Job Application'),
         '#default_value' => isset($node->application) ? $node->application : '',
         '#required' => FALSE  
@@ -255,7 +258,8 @@ function job_form($node, &$form_state) {
         );
       }
       $form['description'] = array(
-        '#type' => 'textarea',
+        '#type' => 'text_format',
+        '#format' => 'filtered_html',
         '#title' => t('Company description'),
         '#default_value' => isset($node->description) ? $node->description : '',
         '#required' => FALSE
@@ -312,10 +316,13 @@ function job_insert($node) {
       ->fields(array(
         'nid' => $node->nid,
         'vid' => $node->vid,
-        'requirement' => $node->requirement,
+        'requirement' => $node->requirement['value'],
         'company' => $node->company,
-        'application' => $node->application,
-        'description' => $node->description,
+        'application' => $node->application['value'],
+        'description' => $node->description['value'],
+        'requirement_format' => $node->requirement['format'],
+        'application_format' => $node->application['format'],
+        'description_format' => $node->description['format'],
       ))
       ->execute();
       break;
@@ -324,7 +331,8 @@ function job_insert($node) {
       ->fields(array(
         'nid' => $node->nid,
         'vid' => $node->vid,
-        'description' => $node->description,
+        'description' => $node->description['value'],
+        'description_format' => $node->description['format'],
         'phone' => $node->phone,
         'fax' => $node->fax,
         'email' => $node->email,
@@ -343,9 +351,12 @@ function job_update($node) {
       $num_of_row = db_update('job')
       ->fields(array(
         'company' => $node->company,
-        'requirement' => $node->requirement,
-        'application' => $node->application,
-        'description' => $node->description,
+        'requirement' => $node->requirement['value'],
+        'application' => $node->application['value'],
+        'description' => $node->description['value'],
+        'requirement_format' => $node->requirement['format'],
+        'application_format' => $node->application['format'],
+        'description_format' => $node->description['format'],
       ))
       ->condition('nid',$node->nid,'=')
       ->execute();
@@ -353,12 +364,13 @@ function job_update($node) {
     case 'company':
       $num_of_row = db_update('company')
       ->fields(array(
-        'description' => $node->description,
+        'description' => $node->description['value'],
         'phone' => $node->phone,
         'fax' => $node->fax,
         'email' => $node->email,
         'website' => $node->website,
         'person' => $node->person,
+        'description_format' => $node->description['format'],
       ))
       ->condition('nid',$node->nid,'=')
       ->execute();
